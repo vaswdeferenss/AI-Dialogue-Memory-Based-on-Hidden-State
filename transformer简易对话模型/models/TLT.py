@@ -84,15 +84,16 @@ class TLT(nn.Module):
                 y = y.to(self.device)
                 new_round = True        # 判断是否为新的对话
 
+                optimizer_encoder.zero_grad()  # 归零
+                optimizer_memory.zero_grad()
+                optimizer_decoder.zero_grad()
+
                 for src,tgt in zip(x.unbind(dim=1),y.unbind(dim=1)):    # 形状为  [batch_size,len]*2
                     src_padding_mask = (src == 0).to(self.device)       # 填充掩码
                     tgt_padding_mask = (tgt == 0).to(self.device)
 
                     src_padding_mask[:, 0] = False                      # 避免全为Ture导致Nan
                     tgt_padding_mask[:, 0] = False
-
-                    optimizer_encoder.zero_grad()                       # 归零
-                    optimizer_decoder.zero_grad()
 
                     output=self.forward(src,tgt,src_padding_mask,tgt_padding_mask,new_round,batch_size)#形状为  [batch_size,len]
                     new_round=False
@@ -113,12 +114,19 @@ class TLT(nn.Module):
 
                     loss = loss_fun(output, tgt)
                     torch.nn.utils.clip_grad_norm_(self.parameters(), max_norm=0.5)
-                    loss.backward()
+                    loss.backward(retain_graph=True)
 
                     optimizer_encoder.step()
                     optimizer_memory.step()
                     optimizer_decoder.step()
+
+                    optimizer_encoder.zero_grad()
+                    optimizer_memory.zero_grad()
+                    optimizer_decoder.zero_grad()
+
                     loss_mean += loss.item()
+
+                torch.cuda.empty_cache()
 
             print(f'epoch {epoch} loss_mean={loss_mean/data_len}')
 
@@ -128,7 +136,7 @@ class TLT(nn.Module):
                 print('保存成功')
 
     # 工作
-    def work(self, params_p):
+    def work0(self, params_p):
 
         try:
             checkpoint = torch.load(params_p, map_location=self.device)
@@ -194,86 +202,86 @@ class TLT(nn.Module):
 
             print('模型回复:', ''.join(response))
 
-    # def work(self, params_p, repetition_penalty=1.2):
-    #
-    #     try:
-    #         checkpoint = torch.load(params_p, map_location=self.device)
-    #         self.encoder.load_state_dict(checkpoint['encoder'])
-    #         self.memory.load_state_dict(checkpoint['memory'])
-    #         self.decoder.load_state_dict(checkpoint['decoder'])  # 修正可能的拼写错误：decoder -> decoder
-    #         self.embedding.weight.data.copy_(checkpoint['embedding'])  # 修正可能的拼写错误：embedding
-    #         print(f"模型 {params_p} 开始工作，输入‘@exit’结束对话")
-    #     except Exception as e:
-    #         print(f"模型加载失败: {str(e)}")
-    #         return
-    #
-    #     self.index_to_word = {v: k for k, v in self.word_to_index.items()}
-    #
-    #     jieba.setLogLevel(logging.WARNING)
-    #     new_round = True
-    #     while True:
-    #         user_input = input('用户输入: ')
-    #         if user_input == '@exit':
-    #             print('对话已结束，感谢您的使用。')
-    #             return
-    #
-    #         # 将输入转为编号矩阵
-    #         seg_list = jieba.lcut(user_input)
-    #         src_indices = [0] * self.max_length
-    #         for i, word in enumerate(seg_list[:self.max_length]):
-    #             src_indices[i] = self.word_to_index.get(word, 0)
-    #         src = torch.tensor(src_indices, device=self.device).unsqueeze(0)
-    #
-    #         # 生成初始目标矩阵
-    #         tgt_indices = torch.zeros((1, self.max_length), dtype=torch.long, device=self.device)
-    #         tgt_indices[0, 0] = self.word_to_index['@']
-    #
-    #         # 编码阶段
-    #         src_embed = self.embedding(src)
-    #         src_pad_mask = (src == 0).to(self.device)
-    #         memory = self.encoder(src_embed, src_pad_mask)
-    #         memory = self.memory(memory, new_round, 1)
-    #         new_round = False
-    #
-    #         for step in range(1, self.max_length):
-    #
-    #             # 处理目标序列
-    #             tgt_embed = self.embedding(tgt_indices)
-    #             tgt_pad_mask = (tgt_indices == 0)
-    #
-    #             # 调用解码器
-    #             output = self.decoder(tgt_embed, memory, tgt_pad_mask)
-    #
-    #             # 连接目标序列
-    #             next_logits = output[0, step - 1, :]
-    #
-    #             # 应用重复惩罚
-    #             if repetition_penalty != 1.0:
-    #                 generated_tokens = tgt_indices[0, :step].tolist()  # 获取已生成的所有token
-    #                 for token in generated_tokens:
-    #                     # 跳过起始符、终止符和填充符
-    #                     if token in [self.word_to_index['@'], self.word_to_index['<end>'], 0]:
-    #                         continue
-    #                     # 对已出现的token的logits进行惩罚
-    #                     next_logits[token] = (
-    #                         next_logits[token] / repetition_penalty
-    #                         if next_logits[token] > 0
-    #                         else next_logits[token] * repetition_penalty
-    #                     )
-    #
-    #             next_token = torch.argmax(next_logits)
-    #             tgt_indices[0, step] = next_token
-    #
-    #             if next_token.item() == self.word_to_index['<end>']:
-    #                 break
-    #
-    #         response = []
-    #         for idx in tgt_indices[0].tolist()[1:]:  # 跳过起始符@
-    #             if idx == 0 or idx == self.word_to_index['<end>']:
-    #                 break
-    #             response.append(self.index_to_word.get(idx, '<UNK>'))
-    #
-    #         print('模型回复:', ''.join(response))
+    def work1(self, params_p, repetition_penalty=1.2):
+
+        try:
+            checkpoint = torch.load(params_p, map_location=self.device)
+            self.encoder.load_state_dict(checkpoint['encoder'])
+            self.memory.load_state_dict(checkpoint['memory'])
+            self.decoder.load_state_dict(checkpoint['decoder'])  # 修正可能的拼写错误：decoder -> decoder
+            self.embedding.weight.data.copy_(checkpoint['embedding'])  # 修正可能的拼写错误：embedding
+            print(f"模型 {params_p} 开始工作，输入‘@exit’结束对话")
+        except Exception as e:
+            print(f"模型加载失败: {str(e)}")
+            return
+
+        self.index_to_word = {v: k for k, v in self.word_to_index.items()}
+
+        jieba.setLogLevel(logging.WARNING)
+        new_round = True
+        while True:
+            user_input = input('用户输入: ')
+            if user_input == '@exit':
+                print('对话已结束，感谢您的使用。')
+                return
+
+            # 将输入转为编号矩阵
+            seg_list = jieba.lcut(user_input)
+            src_indices = [0] * self.max_length
+            for i, word in enumerate(seg_list[:self.max_length]):
+                src_indices[i] = self.word_to_index.get(word, 0)
+            src = torch.tensor(src_indices, device=self.device).unsqueeze(0)
+
+            # 生成初始目标矩阵
+            tgt_indices = torch.zeros((1, self.max_length), dtype=torch.long, device=self.device)
+            tgt_indices[0, 0] = self.word_to_index['@']
+
+            # 编码阶段
+            src_embed = self.embedding(src)
+            src_pad_mask = (src == 0).to(self.device)
+            memory = self.encoder(src_embed, src_pad_mask)
+            memory = self.memory(memory, new_round, 1)
+            new_round = False
+
+            for step in range(1, self.max_length):
+
+                # 处理目标序列
+                tgt_embed = self.embedding(tgt_indices)
+                tgt_pad_mask = (tgt_indices == 0)
+
+                # 调用解码器
+                output = self.decoder(tgt_embed, memory, tgt_pad_mask)
+
+                # 连接目标序列
+                next_logits = output[0, step - 1, :]
+
+                # 应用重复惩罚
+                if repetition_penalty != 1.0:
+                    generated_tokens = tgt_indices[0, :step].tolist()  # 获取已生成的所有token
+                    for token in generated_tokens:
+                        # 跳过起始符、终止符和填充符
+                        if token in [self.word_to_index['@'], self.word_to_index['<end>'], 0]:
+                            continue
+                        # 对已出现的token的logits进行惩罚
+                        next_logits[token] = (
+                            next_logits[token] / repetition_penalty
+                            if next_logits[token] > 0
+                            else next_logits[token] * repetition_penalty
+                        )
+
+                next_token = torch.argmax(next_logits)
+                tgt_indices[0, step] = next_token
+
+                if next_token.item() == self.word_to_index['<end>']:
+                    break
+
+            response = []
+            for idx in tgt_indices[0].tolist()[1:]:  # 跳过起始符@
+                if idx == 0 or idx == self.word_to_index['<end>']:
+                    break
+                response.append(self.index_to_word.get(idx, '<UNK>'))
+
+            print('模型回复:', ''.join(response))
 
     # 参数保存
     def save_core_params(self, path):
