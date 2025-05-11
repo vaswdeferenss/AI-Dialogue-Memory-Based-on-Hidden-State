@@ -72,28 +72,28 @@ class memory(nn.Module):
         emo_output, (h_emo1, c_emo1) = self.emotional_memory[0](
             src, (self.state_emo1_h, self.state_emo1_c)
         )
-        self.state_emo1_h, self.state_emo1_c = h_emo1.detach(), c_emo1.detach()  # 分离梯度
+        self.state_emo1_h, self.state_emo1_c = h_emo1.detach().clone(), c_emo1.detach().clone()
         emo_output = self.emotional_ln[0](emo_output)
 
         # 处理信息记忆第一层LSTM
         inf_output, (h_inf1, c_inf1) = self.information_memory[0](
             src, (self.state_inf1_h, self.state_inf1_c)
         )
-        self.state_inf1_h, self.state_inf1_c = h_inf1.detach(), c_inf1.detach()  # 分离梯度
+        self.state_inf1_h, self.state_inf1_c = h_inf1.detach().clone(), c_inf1.detach().clone()
         inf_output = self.information_ln[0](inf_output)
 
         # 处理情绪记忆第二层LSTM
         emo_output, (h_emo2, c_emo2) = self.emotional_memory[1](
             emo_output, (self.state_emo2_h, self.state_emo2_c)
         )
-        self.state_emo2_h, self.state_emo2_c = h_emo2.detach(), c_emo2.detach()
+        self.state_emo2_h, self.state_emo2_c = h_emo2.detach().clone(), c_emo2.detach().clone()
         emo_output = self.emotional_ln[1](emo_output)
 
         # 处理信息记忆第二层LSTM
         inf_output, (h_inf2, c_inf2) = self.information_memory[1](
             inf_output, (self.state_inf2_h, self.state_inf2_c)
         )
-        self.state_inf2_h, self.state_inf2_c = h_inf2.detach(), c_inf2.detach()
+        self.state_inf2_h, self.state_inf2_c = h_inf2.detach().clone(), c_inf2.detach().clone()
         inf_output = self.information_ln[1](inf_output)
 
         src = (src + self.w_inf * inf_output) * self.w_emo * emo_output+src
